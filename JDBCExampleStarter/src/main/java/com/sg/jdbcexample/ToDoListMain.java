@@ -5,7 +5,9 @@
  */
 package com.sg.jdbcexample;
 
-import java.sql.SQLException;
+import com.mysql.cj.jdbc.MysqlDataSource;
+import javax.sql.DataSource;
+import java.sql.*;
 import java.util.Scanner;
 
 /**
@@ -32,6 +34,13 @@ public class ToDoListMain {
     }
 
     public static void main(String[] args) {
+        try {
+            ds = getDataSource();
+        } catch (SQLException ex) {
+            System.out.println("Error connecting to database");
+            System.out.println(ex.getMessage());
+            System.exit(0);
+        }
 
         sc = new Scanner(System.in);
 
@@ -70,14 +79,6 @@ public class ToDoListMain {
             }
 
         } while (true);
-        
-        try {
-            ds = getDataSource();
-        } catch (SQLException ex) {
-            System.out.println("Error connecting to database");
-            System.out.println(ex.getMessage());
-            System.exit(0);
-        }
     }
 
     private static void displayList() throws SQLException {
@@ -125,42 +126,36 @@ public class ToDoListMain {
             ToDo td = new ToDo();
             td.setId(rs.getInt("id"));
             td.setTodo(rs.getString("todo"));
-            td.setName(rs.getString("note"));
-            td.seteFinished(rs.getBoolean("finished"));
-            
+            td.setNote(rs.getString("note"));
+            td.setFinished(rs.getBoolean("finished"));
+
             System.out.println("1. ToDo - " + td.getTodo());
             System.out.println("2. Note - " + td.getNote());
             System.out.println("3. Finished - " + td.isFinished());
             System.out.println("What would you like to change?");
-            String choice = sc.nextLine();
-            switch(choice) {
+            String choice = sc.nextLine(); switch(choice) {
                 case "1":
-                    System.out.println("Enter new ToDo:");
-                    String todo = sc.nextLine();
-                    td.setTodo(todo);
+                    System.out.println("Enter new ToDo:"); String todo = sc.nextLine(); td.setTodo(todo);
                     break;
                 case "2":
-                    System.out.println("Enter new Note:");
-                    String note = sc.nextLine();
-                    td.setNote(note);
+                    System.out.println("Enter new Note:"); String note = sc.nextLine(); td.setNote(note);
                     break;
                 case "3":
-                    System.out.println("Toggling Finished to " + !td.isFinished());
-                    td.setFinished(!td.isFiinished());
+                    System.out.println("Toggling Finished to" + !td.isFinished());
+                    td.setFinished(!td.isFinished());
                     break;
                 default:
                     System.out.println("No change made");
                     return;
             }
-            String updateSql = "UPDATE todo SET todo ?, note = ?, finished = ? WHERE id = ?";
-            PreparedStatement updatePStmt = conn.prepareCall(updateSql);
-                updatePStmt.setString(1, td.getTodo());
-                updatePStmt.setString(2, td.getNote());
-                updatePStmt.setBoolean(3, td.isFinished());
-                
-                updatePStmt.setInt(4, td.getId());
-                updatePStmt.executeUpdate();
-                System.out.println("Update Complete");
+            String updateSql = "UPDATE todo SET todo = ?, note = ?, finished = ? WHERE id = ?";
+            PreparedStatement updatePStmt = conn.prepareCall (updateSql);
+            updatePStmt.setString(1, td.getTodo());
+            updatePStmt.setString(2, td.getNote());
+            updatePStmt.setBoolean(3, td.isFinished());
+            updatePStmt.setInt(4, td.getId());
+            updatePStmt.executeUpdate();
+            System.out.println("Update Complete");
         }
     }
 
